@@ -1,59 +1,69 @@
 package com.example.CalendarManagement.service;
 
-
+import com.example.CalendarManagement.DTO.EmployeeDTO;
 import com.example.CalendarManagement.Exception.DuplicateEmailException;
 import com.example.CalendarManagement.model.EmployeeModel;
 import com.example.CalendarManagement.repository.EmployeeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import static org.hibernate.loader.Loader.SELECT;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployeeService {
     @Autowired
-    EmployeeRepo employeeRepo;
+    private EmployeeRepo employeeRepo;
 
 
-    public List<EmployeeModel> getEmployees(){
-        return employeeRepo.findActiveEmployees();
+    public List<EmployeeDTO> getEmployees() {
+        return employeeRepo.findAll().stream()
+                .map(emp -> new EmployeeDTO(emp.getId(), emp.getName(), emp.getWorkEmail(), emp.getOfficeLocation(), emp.isActive()))
+                .collect(Collectors.toList());
     }
 
-    public EmployeeModel getEmployeeById(int employeeId) {
-        return employeeRepo.findById(employeeId).orElse(null);
+
+    public EmployeeDTO getEmployeeById(int employeeId) {
+        EmployeeModel employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+
+        return new EmployeeDTO(employee.getId(), employee.getName(), employee.getWorkEmail(), employee.getOfficeLocation(), employee.isActive());
     }
 
-    public void addEmployee(EmployeeModel emp) {
-        if (employeeRepo.existsById(emp.getId())) {
+
+
+    public void addEmployee(EmployeeDTO empDTO) {
+        if (empDTO.getEmployeeId() != 0 && employeeRepo.existsById(empDTO.getEmployeeId())) {
             throw new IllegalArgumentException("Employee ID already exists.");
         }
 
-
-        if (employeeRepo.findByWorkEmail(emp.getWorkEmail()).isPresent()) {
-            throw new DuplicateEmailException("Email already in use.");
+        // Validate name
+        if (empDTO.getName() == null || empDTO.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Employee name cannot be empty.");
         }
 
-
-        if (!emp.getWorkEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+        // Validate email format
+        if (!empDTO.getWorkEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             throw new IllegalArgumentException("Invalid email format.");
         }
 
-
-        if (emp.getName() == null || emp.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Employee name cannot be empty.");
+        // Check duplicate email
+        if (employeeRepo.findByWorkEmail(empDTO.getWorkEmail()).isPresent()) {
+            throw new DuplicateEmailException("Email already in use.");
         }
+
+        // Create and save new Employee
+        EmployeeModel emp = new EmployeeModel(empDTO.getName(), empDTO.getWorkEmail(), empDTO.getOfficeLocation(), empDTO.isActive());
         employeeRepo.save(emp);
     }
 
-    public void deleteEmployee(int employeeId) {
-        EmployeeModel employee = employeeRepo.findById(employeeId).orElse(null);
-        if (employee != null) {
 
-            employee.setActive(false);
-            employeeRepo.save(employee); // Update in the database
-        }
+    public void deleteEmployee(int employeeId) {
+        EmployeeModel employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+
+        employee.setActive(false);
+        employeeRepo.save(employee);
     }
 }

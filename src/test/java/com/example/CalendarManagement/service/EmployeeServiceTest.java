@@ -1,5 +1,6 @@
 package com.example.CalendarManagement.service;
 
+import com.example.CalendarManagement.DTO.EmployeeDTO;
 import com.example.CalendarManagement.Exception.DuplicateEmailException;
 import com.example.CalendarManagement.model.EmployeeModel;
 import com.example.CalendarManagement.repository.EmployeeRepo;
@@ -27,86 +28,66 @@ class EmployeeServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
-
     @Test
-    void addEmployee_givenValidEmployeeIdNameEmailOffice_returnsSuccess() {
-        EmployeeModel emp = new EmployeeModel();
-        emp.setId(1);
-        emp.setName("Amar");
-        emp.setWorkEmail("amar@capillary.com");
-        emp.setOfficeLocation("bnglr");
-        emp.setActive(true);
+    void addEmployee_givenValidEmployeeDTO_returnsSuccess() {
+        EmployeeDTO empDTO = new EmployeeDTO(1, "Amar", "amar@capillary.com", "Bangalore", true);
+        EmployeeModel empModel = new EmployeeModel(empDTO.getName(), empDTO.getWorkEmail(), empDTO.getOfficeLocation(), empDTO.isActive());
 
-        when(employeeRepo.existsById(emp.getId())).thenReturn(false);
-        when(employeeRepo.findByWorkEmail(emp.getWorkEmail())).thenReturn(Optional.empty());
+        when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(false);
+        when(employeeRepo.findByWorkEmail(empDTO.getWorkEmail())).thenReturn(Optional.empty());
 
-        assertDoesNotThrow(() -> employeeService.addEmployee(emp));
+        assertDoesNotThrow(() -> employeeService.addEmployee(empDTO));
 
-        verify(employeeRepo, times(1)).save(emp);
+        verify(employeeRepo, times(1)).save(any(EmployeeModel.class));
     }
-
 
     @Test
     void addEmployee_givenDuplicateEmployeeId_throwsException() {
-        EmployeeModel emp = new EmployeeModel();
+        EmployeeDTO empDTO = new EmployeeDTO(1, "New", "amar@example.com", "Bangalore", true);
 
-        emp.setName("new");
-        emp.setWorkEmail("amar@example.com");
+        when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(true);
 
-        when(employeeRepo.existsById(emp.getId())).thenReturn(true);
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> employeeService.addEmployee(emp));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> employeeService.addEmployee(empDTO));
         assertEquals("Employee ID already exists.", exception.getMessage());
 
         verify(employeeRepo, never()).save(any());
     }
 
-
     @Test
     void addEmployee_givenInvalidEmail_throwsValidationError() {
-        EmployeeModel emp = new EmployeeModel();
+        EmployeeDTO empDTO = new EmployeeDTO(1, "Sham", "invalid-email", "Bangalore", true);
 
-        emp.setName("Sham");
-        emp.setWorkEmail("invalid-email");
+        when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(false);
+        when(employeeRepo.findByWorkEmail(empDTO.getWorkEmail())).thenReturn(Optional.empty());
 
-        when(employeeRepo.existsById(emp.getId())).thenReturn(false);
-        when(employeeRepo.findByWorkEmail(emp.getWorkEmail())).thenReturn(Optional.empty());
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> employeeService.addEmployee(emp));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> employeeService.addEmployee(empDTO));
         assertEquals("Invalid email format.", exception.getMessage());
 
         verify(employeeRepo, never()).save(any());
     }
 
-
     @Test
     void addEmployee_givenDuplicateEmail_throwsException() {
-        EmployeeModel emp = new EmployeeModel();
-        emp.setId(1);
-        emp.setName("amar");
-        emp.setWorkEmail("amar@capillary.com");
+        EmployeeDTO empDTO = new EmployeeDTO(1, "Amar", "amar@capillary.com", "Bangalore", true);
+        EmployeeModel existingEmployee = new EmployeeModel(empDTO.getName(), empDTO.getWorkEmail(), empDTO.getOfficeLocation(), empDTO.isActive());
 
-        when(employeeRepo.existsById(emp.getId())).thenReturn(false);
-        when(employeeRepo.findByWorkEmail(emp.getWorkEmail())).thenReturn(Optional.of(emp));
+        when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(false);
+        when(employeeRepo.findByWorkEmail(empDTO.getWorkEmail())).thenReturn(Optional.of(existingEmployee));
 
-        Exception exception = assertThrows(DuplicateEmailException.class, () -> employeeService.addEmployee(emp));
+        Exception exception = assertThrows(DuplicateEmailException.class, () -> employeeService.addEmployee(empDTO));
         assertEquals("Email already in use.", exception.getMessage());
 
         verify(employeeRepo, never()).save(any());
     }
 
-
     @Test
     void addEmployee_givenEmptyName_throwsValidationError() {
-        EmployeeModel emp = new EmployeeModel();
-        emp.setId(1);
-        emp.setName("");
-        emp.setWorkEmail("amar@example.com");
+        EmployeeDTO empDTO = new EmployeeDTO(1, "", "amar@example.com", "Bangalore", true);
 
-        when(employeeRepo.existsById(emp.getId())).thenReturn(false);
-        when(employeeRepo.findByWorkEmail(emp.getWorkEmail())).thenReturn(Optional.empty());
+        when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(false);
+        when(employeeRepo.findByWorkEmail(empDTO.getWorkEmail())).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> employeeService.addEmployee(emp));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> employeeService.addEmployee(empDTO));
         assertEquals("Employee name cannot be empty.", exception.getMessage());
 
         verify(employeeRepo, never()).save(any());

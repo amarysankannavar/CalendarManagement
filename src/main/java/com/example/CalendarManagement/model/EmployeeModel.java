@@ -12,7 +12,18 @@ public class EmployeeModel {
     private String name;
     private String workEmail;
     private String officeLocation;
+    @Column(columnDefinition = "BOOLEAN DEFAULT true")
     private boolean isActive=true;
+
+    public EmployeeModel() {
+    }
+
+    public EmployeeModel(String name, String workEmail, String officeLocation, boolean active) {
+        this.name=name;
+        this.workEmail=workEmail;
+        this.officeLocation=officeLocation;
+
+    }
 
     public int getId(){
         return id;
