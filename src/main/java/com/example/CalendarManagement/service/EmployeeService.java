@@ -60,6 +60,7 @@ public class EmployeeService {
 
 
     public void deleteEmployee(int employeeId) {
+
         EmployeeModel employee = employeeRepo.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
 

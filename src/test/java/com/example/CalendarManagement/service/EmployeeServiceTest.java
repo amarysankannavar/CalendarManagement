@@ -10,8 +10,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -92,4 +95,88 @@ class EmployeeServiceTest {
 
         verify(employeeRepo, never()).save(any());
     }
+
+    @Test
+    void removeEmployee_givenEmployeeId_setsActiveFalse() {
+        // Given
+        int employeeId = 1;
+        EmployeeModel employee = new EmployeeModel();
+        employee.setId(employeeId);
+        employee.setActive(true); // Initially active
+
+        when(employeeRepo.findById(employeeId)).thenReturn(Optional.of(employee));
+        when(employeeRepo.save(any(EmployeeModel.class))).thenReturn(employee); // Mock save operation
+
+        employeeService.deleteEmployee(employeeId);
+
+        assertFalse(employee.isActive()); // Ensure the active flag is set to false
+
+        verify(employeeRepo, times(1)).findById(employeeId);
+        verify(employeeRepo, times(1)).save(employee);
+    }
+
+    @Test
+    void removeEmployee_givenNonExistingEmployeeId_throwsNotFoundException(){
+        int employeeId=2;
+
+
+        when(employeeRepo.findById(employeeId)).thenReturn(Optional.empty());
+
+
+
+        Exception exception = assertThrows(IllegalArgumentException.class,()-> employeeService.deleteEmployee(employeeId));
+        assertEquals("Employee not found",exception.getMessage());
+        verify(employeeRepo, times(1)).findById(employeeId);
+        verify(employeeRepo, never()).save(any(EmployeeModel.class));
+    }
+
+
+    @Test
+    void getEmployees_givenValidEmployeeId_returnsEmployeeInfo() {
+        // Given
+        int employeeId = 1;
+        EmployeeModel employee = new EmployeeModel();
+        employee.setId(employeeId);
+        employee.setName("John Doe");
+        employee.setActive(true);
+
+        when(employeeRepo.findById(employeeId)).thenReturn(Optional.of(employee));
+
+        // When
+        EmployeeDTO result = employeeService.getEmployeeById(employeeId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getEmployeeId()).isEqualTo(employeeId);
+        assertThat(result.getName()).isEqualTo("John Doe");
+        assertThat(result.isActive()).isTrue();
+
+        verify(employeeRepo, times(1)).findById(employeeId);
+    }
+
+    @Test
+    void getEmployees_whenEmployeesExist_returnEmployeeList() {
+        // Given
+        List<EmployeeModel> employees = Arrays.asList(
+                new EmployeeModel("amar", "sgs@f.h","n",true),
+                new EmployeeModel("ram","fc@h.ihu" , "ram",true)
+        );
+
+        when(employeeRepo.findAll()).thenReturn(employees);
+
+        // When
+        List<EmployeeDTO> result = employeeService.getEmployees();
+
+        // Then
+        assertThat(result).isNotNull();
+        //assertThat(result).hasSize(2);
+        //assertThat(result).containsExactlyElementsOf(employees);
+
+        verify(employeeRepo, times(1)).findAll();
+    }
+
+
+
+
+
 }
