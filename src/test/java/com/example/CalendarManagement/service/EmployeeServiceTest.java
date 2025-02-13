@@ -10,11 +10,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -157,22 +160,39 @@ class EmployeeServiceTest {
     @Test
     void getEmployees_whenEmployeesExist_returnEmployeeList() {
         // Given
-        List<EmployeeModel> employees = Arrays.asList(
-                new EmployeeModel("amar", "sgs@f.h","n",true),
-                new EmployeeModel("ram","fc@h.ihu" , "ram",true)
-        );
+        EmployeeModel employee1 = new EmployeeModel( "John Doe", "john@example.com", "NY Office", true);
+        EmployeeModel employee2 = new EmployeeModel( "Jane Doe", "jane@example.com", "LA Office", true);
 
-        when(employeeRepo.findAll()).thenReturn(employees);
+        List<EmployeeModel> employeeModels = Arrays.asList(employee1, employee2);
+
+        when(employeeRepo.findAll()).thenReturn(employeeModels);
 
         // When
         List<EmployeeDTO> result = employeeService.getEmployees();
 
         // Then
-        assertThat(result).isNotNull();
-        //assertThat(result).hasSize(2);
-        //assertThat(result).containsExactlyElementsOf(employees);
+        assertThat(result)
+                .hasSize(2)
+                .extracting( EmployeeDTO::getName, EmployeeDTO::getWorkEmail, EmployeeDTO::getOfficeLocation, EmployeeDTO::isActive)
+                .containsExactlyInAnyOrder(
+                        tuple( "John Doe", "john@example.com", "NY Office", true),
+                        tuple( "Jane Doe", "jane@example.com", "LA Office", true)
+                );
 
         verify(employeeRepo, times(1)).findAll();
+    }
+
+    @Test
+    void getEmployee_givenNonExistEmployeeId_throwsNotFoundException(){
+        int employeeId=23;
+
+        when(employeeRepo.findById(employeeId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(IllegalArgumentException.class, ()->employeeService.getEmployeeById(employeeId));
+
+        assertEquals("Employee not found",exception.getMessage());
+
+        verify(employeeRepo, times(1)).findById(employeeId);
     }
 
 
