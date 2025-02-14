@@ -2,6 +2,7 @@ package com.example.CalendarManagement.service;
 
 import com.example.CalendarManagement.DTO.EmployeeDTO;
 import com.example.CalendarManagement.Exception.DuplicateEmailException;
+import com.example.CalendarManagement.Exception.EmployeeNotFoundException;
 import com.example.CalendarManagement.model.EmployeeModel;
 import com.example.CalendarManagement.repository.EmployeeRepo;
 import org.junit.jupiter.api.BeforeEach;
@@ -127,7 +128,7 @@ class EmployeeServiceTest {
 
 
 
-        Exception exception = assertThrows(IllegalArgumentException.class,()-> employeeService.deleteEmployee(employeeId));
+        Exception exception = assertThrows(EmployeeNotFoundException.class,()-> employeeService.deleteEmployee(employeeId));
         assertEquals("Employee not found",exception.getMessage());
         verify(employeeRepo, times(1)).findById(employeeId);
         verify(employeeRepo, never()).save(any(EmployeeModel.class));

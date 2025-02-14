@@ -2,13 +2,13 @@ package com.example.CalendarManagement.service;
 
 import com.example.CalendarManagement.DTO.EmployeeDTO;
 import com.example.CalendarManagement.Exception.DuplicateEmailException;
+import com.example.CalendarManagement.Exception.EmployeeNotFoundException;
 import com.example.CalendarManagement.model.EmployeeModel;
 import com.example.CalendarManagement.repository.EmployeeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,7 +62,7 @@ public class EmployeeService {
     public void deleteEmployee(int employeeId) {
 
         EmployeeModel employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
         employee.setActive(false);
         employeeRepo.save(employee);

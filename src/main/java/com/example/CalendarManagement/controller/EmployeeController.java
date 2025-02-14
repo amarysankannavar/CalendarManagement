@@ -46,13 +46,10 @@ public class EmployeeController {
 
     @DeleteMapping("/employees/{employeeId}")
     public ResponseEntity<ApiResponse<String>> deleteEmployee(@PathVariable int employeeId) {
-        try {
+
             service.deleteEmployee(employeeId);
             return ResponseEntity.ok(new ApiResponse<>("Employee deactivated successfully", 200, "Success", null));
-        } catch (IllegalArgumentException e) {  // Catch exception when employee is not found
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(e.getMessage(), 404, "Error", null));
-        }
+
     }
 
 

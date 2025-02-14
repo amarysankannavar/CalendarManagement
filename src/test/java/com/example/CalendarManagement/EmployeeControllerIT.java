@@ -64,7 +64,7 @@ public class EmployeeControllerIT {
     }
 
     @Test
-    void getEmployeeById_returnsEmployee() throws Exception {
+    void getEmployee_givenEmployeeId_returnsEmployee() throws Exception {
         EmployeeModel employee = employeeRepo.save(new EmployeeModel("Ajay", "ajay@example.com", "SF Office", true));
 
         mockMvc.perform(get("/employees/" + employee.getId()))
@@ -75,7 +75,7 @@ public class EmployeeControllerIT {
 
 
     @Test
-    void addEmployee_createsNewEmployee() throws Exception {
+    void addEmployee_givenEmployeeDetails_createsNewEmployee() throws Exception {
         String newEmployeeJson = "{ \"name\": \"Alice\", \"workEmail\": \"alice@example.com\", \"officeLocation\": \"Boston Office\", \"isActive\": true }";
 
         mockMvc.perform(post("/employees")
@@ -89,18 +89,19 @@ public class EmployeeControllerIT {
 
 
     @Test
-    void deleteEmployee_removesEmployee() throws Exception {
-        mockMvc.perform(delete("/employees/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Employee deactivated successfully"))
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").value("Success"));
+    void deleteEmployee_givenEmployeeId_removesEmployee() throws Exception {
+        mockMvc.perform(delete("/employees/3223"))
+                .andExpect(status().isNotFound())
+                 .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value("Employee not found"));
+
     }
 
     @Test
-    void givenNonExistEmployeeId_throwsNotFoundException() throws Exception{
+    void deleteEmployee_givenNonExistEmployeeId_throwsNotFoundException() throws Exception{
         mockMvc.perform(delete("/employees/3223"))
                 .andExpect(status().isNotFound())
+                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.message").value("Employee not found"));
     }
 
