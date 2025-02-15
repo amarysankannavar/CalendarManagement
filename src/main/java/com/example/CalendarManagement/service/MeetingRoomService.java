@@ -3,6 +3,8 @@ package com.example.CalendarManagement.service;
 import com.example.CalendarManagement.DTO.EmployeeDTO;
 import com.example.CalendarManagement.DTO.MeetingRoomDTO;
 import com.example.CalendarManagement.Exception.DuplicateEmailException;
+import com.example.CalendarManagement.Exception.EmployeeNotFoundException;
+import com.example.CalendarManagement.Exception.RoomNotFoundException;
 import com.example.CalendarManagement.model.EmployeeModel;
 import com.example.CalendarManagement.model.MeetingRoomModel;
 import com.example.CalendarManagement.repository.MeetingRoomRepo;
@@ -30,22 +32,41 @@ public class MeetingRoomService {
         }
 
         // Validate name
-        /*if (empDTO.getName() == null || empDTO.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Employee name cannot be empty.");
+        if (roomDTO.getRoomName() == null || roomDTO.getRoomName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Meeting room name cannot be empty.");
         }
 
-        // Validate email format
-        if (!empDTO.getWorkEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            throw new IllegalArgumentException("Invalid email format.");
+        if (roomDTO.getRoomLocation() == null || roomDTO.getRoomLocation().trim().isEmpty()) {
+            throw new IllegalArgumentException("Meeting room location cannot be empty.");
         }
 
-        // Check duplicate email
-        if (employeeRepo.findByWorkEmail(empDTO.getWorkEmail()).isPresent()) {
-            throw new DuplicateEmailException("Email already in use.");
-        }*/
 
         // Create and save new Employee
-        MeetingRoomModel room = new MeetingRoomModel(roomDTO.getRoomName(), roomDTO.getRoomLocation(), roomDTO.getOfficeId(), roomDTO.isAvailable());
+        MeetingRoomModel room = new MeetingRoomModel(roomDTO.getRoomName(), roomDTO.getRoomLocation(), roomDTO.getOfficeId());
         meetingRoomRepo.save(room);
     }
+
+    public MeetingRoomDTO getMeetingRoomById(int meetingRoomId) {
+        MeetingRoomModel meetingRoom = meetingRoomRepo.findById(meetingRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+
+        return new MeetingRoomDTO(meetingRoom.getRoomId(), meetingRoom.getRoomName(), meetingRoom.getRoomLocation(), meetingRoom.getOfficeId(), meetingRoom.isAvailable());
+    }
+
+    public void deleteMeetingRoom(int roomId) {
+
+        MeetingRoomModel room = meetingRoomRepo.findById(roomId)
+                .orElseThrow(() -> new RoomNotFoundException("Meeting Room not found"));
+
+        meetingRoomRepo.delete(room);
+    }
+
+    public void updateMeetingRoomAvailability(int roomId, boolean availability) {
+        MeetingRoomModel room = meetingRoomRepo.findById(roomId)
+                .orElseThrow(() -> new RoomNotFoundException("Meeting Room not found"));
+
+        room.setAvailable(availability);
+        meetingRoomRepo.save(room);
+    }
+
 }

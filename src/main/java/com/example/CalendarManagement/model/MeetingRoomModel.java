@@ -19,11 +19,10 @@ public class MeetingRoomModel {
 
     }
 
-    public MeetingRoomModel(String roomName,String roomLocation, int officeId, boolean available){
+    public MeetingRoomModel(String roomName,String roomLocation, int officeId){
         this.roomName=roomName;
         this.roomLocation=roomLocation;
         this.officeId=officeId;
-        this.available=true;
     }
 
     public int getRoomId(){

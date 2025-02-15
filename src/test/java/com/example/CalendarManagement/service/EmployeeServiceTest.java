@@ -36,7 +36,7 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void addEmployee_givenValidEmployeeDTO_returnsSuccess() {
+    void addEmployee_givenValidEmployeeDetails_returnsSuccess() {
         EmployeeDTO empDTO = new EmployeeDTO(1, "Amar", "amar@capillary.com", "Bangalore", true);
         EmployeeModel empModel = new EmployeeModel(empDTO.getName(), empDTO.getWorkEmail(), empDTO.getOfficeLocation(), empDTO.isActive());
 
