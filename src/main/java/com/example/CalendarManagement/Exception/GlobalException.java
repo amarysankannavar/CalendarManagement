@@ -50,6 +50,13 @@ class GlobalExceptionHandler {
                 .body(new ApiResponse<>(ex.getMessage(), 404, "Error", null));
     }
 
+    @ExceptionHandler(RoomNotFoundException.class)
+    public ResponseEntity<ApiResponse<String>> handleRoomNotFoundException(RoomNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>(ex.getMessage(), 404, "Error", null));
+    }
+
+
     private Map<String, String> getErrorDetails(String message) {
         Map<String, String> errorDetails = new HashMap<>();
         errorDetails.put("details", message);

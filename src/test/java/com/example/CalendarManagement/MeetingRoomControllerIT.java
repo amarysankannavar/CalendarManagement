@@ -93,10 +93,27 @@ public class MeetingRoomControllerIT {
     void updateMeetingRoomAvailability_givenRoomId_updatesAvailability() throws Exception {
         MeetingRoomModel room = meetingRoomRepo.save(new MeetingRoomModel("Quiet Room", "Berlin Office", 106));
 
-        mockMvc.perform(put("/meetingRooms/" + room.getRoomId() + "/availability")
-                        .param("availability", "true"))
+        String requestBody = "{ \"availability\": true }";
+
+        mockMvc.perform(put("/meetingRooms/" + room.getRoomId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Meeting Room availability updated successfully"))
-                .andExpect(jsonPath("$.code").value(404));
+                .andExpect(jsonPath("$.code").value(200));
     }
+
+    @Test
+    void updateMeetingRoomAvailability_givenNonExistingRoomId_throwsNotFoundException() throws Exception {
+        int nonExistingRoomId = 23;
+        String requestBody = "{ \"availability\": true }";
+
+        mockMvc.perform(put("/meetingRooms/" + nonExistingRoomId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value("Meeting Room not found"));
+    }
+
 }

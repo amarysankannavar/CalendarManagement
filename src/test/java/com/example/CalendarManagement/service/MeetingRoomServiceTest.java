@@ -10,9 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -77,22 +75,19 @@ class MeetingRoomServiceTest {
     }
 
     @Test
-    void deleteMeetingRoom_givenExistingRoomId_setsAvailableFalse() {
+    void deleteMeetingRoom_givenExistingRoomId_deletesRoom() {
         int roomId = 1;
         MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
         room.setRoomId(roomId);
-        room.setAvailable(true);
 
         when(meetingRoomRepo.findById(roomId)).thenReturn(Optional.of(room));
-        when(meetingRoomRepo.save(any(MeetingRoomModel.class))).thenReturn(room);
 
         meetingRoomService.deleteMeetingRoom(roomId);
 
-        assertFalse(room.isAvailable());
-
-        verify(meetingRoomRepo, times(1)).findById(roomId);
-        verify(meetingRoomRepo, times(1)).save(room);
+        verify(meetingRoomRepo, times(1)).findById(roomId); // ✅ Ensure findById() was called
+        verify(meetingRoomRepo, times(1)).delete(room); // ✅ Ensure delete() was called
     }
+
 
     @Test
     void deleteMeetingRoom_givenNonExistingRoomId_throwsNotFoundException() {
@@ -151,9 +146,91 @@ class MeetingRoomServiceTest {
         int roomId = 3;
         when(meetingRoomRepo.findById(roomId)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> meetingRoomService.getMeetingRoomById(roomId));
-        assertEquals("Employee not found", exception.getMessage());
+        Exception exception = assertThrows(RoomNotFoundException.class, () -> meetingRoomService.getMeetingRoomById(roomId));
+        assertEquals("Meeting Room not found", exception.getMessage());
 
         verify(meetingRoomRepo, times(1)).findById(roomId);
     }
+
+    @Test
+    void updateMeetingRoomAvailability_givenExistingRoomId_setsAvailableTrue() {
+        int roomId = 1;
+        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
+        room.setRoomId(roomId);
+        room.setAvailable(false);
+
+        when(meetingRoomRepo.findById(roomId)).thenReturn(Optional.of(room));
+        when(meetingRoomRepo.save(any(MeetingRoomModel.class))).thenReturn(room);
+
+        Map<String, Boolean> requestBody = new HashMap<>();
+        requestBody.put("availability", true);
+
+        meetingRoomService.updateMeetingRoomAvailability(roomId, requestBody.get("availability"));
+
+        assertTrue(room.isAvailable());
+
+        verify(meetingRoomRepo, times(1)).findById(roomId);
+        verify(meetingRoomRepo, times(1)).save(room);
+    }
+
+    @Test
+    void updateMeetingRoomAvailability_givenExistingRoomId_setsAvailableFalse() {
+        int roomId = 1;
+        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
+        room.setRoomId(roomId);
+        room.setAvailable(true);
+
+        when(meetingRoomRepo.findById(roomId)).thenReturn(Optional.of(room));
+        when(meetingRoomRepo.save(any(MeetingRoomModel.class))).thenReturn(room);
+
+        Map<String, Boolean> requestBody = new HashMap<>();
+        requestBody.put("availability", false);
+
+        meetingRoomService.updateMeetingRoomAvailability(roomId, requestBody.get("availability"));
+
+        assertFalse(room.isAvailable());
+
+        verify(meetingRoomRepo, times(1)).findById(roomId);
+        verify(meetingRoomRepo, times(1)).save(room);
+    }
+
+    @Test
+    void updateMeetingRoomAvailability_givenNonExistingRoomId_throwsNotFoundException() {
+        int roomId = 2;
+        when(meetingRoomRepo.findById(roomId)).thenReturn(Optional.empty());
+
+        Map<String, Boolean> requestBody = new HashMap<>();
+        requestBody.put("availability", true);
+
+        Exception exception = assertThrows(RoomNotFoundException.class,
+                () -> meetingRoomService.updateMeetingRoomAvailability(roomId, requestBody.get("availability")));
+
+        assertEquals("Meeting Room not found", exception.getMessage());
+
+        verify(meetingRoomRepo, times(1)).findById(roomId);
+        verify(meetingRoomRepo, never()).save(any());
+    }
+
+    @Test
+    void updateMeetingRoomAvailability_givenRoomAlreadyInDesiredState_doesNotChangeAvailability() {
+        int roomId = 1;
+        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
+        room.setRoomId(roomId);
+        room.setAvailable(true);
+
+        when(meetingRoomRepo.findById(roomId)).thenReturn(Optional.of(room));
+
+        Map<String, Boolean> requestBody = new HashMap<>();
+        requestBody.put("availability", true);
+
+        meetingRoomService.updateMeetingRoomAvailability(roomId, requestBody.get("availability"));
+
+        assertTrue(room.isAvailable());
+
+        verify(meetingRoomRepo, times(1)).findById(roomId);
+        verify(meetingRoomRepo, times(0)).save(any()); // Ensure save() is never called
+    }
+
+
+
 }

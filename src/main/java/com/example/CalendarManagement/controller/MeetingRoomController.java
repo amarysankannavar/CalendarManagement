@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class MeetingRoomController {
@@ -44,13 +45,17 @@ public class MeetingRoomController {
 
     }
 
-    @PutMapping("/meetingRooms/{roomId}")
+    @PutMapping("/meetingRooms/{roomId}")  // Removed "availability" from the path
     public ResponseEntity<ApiResponse<String>> updateMeetingRoomAvailability(
             @PathVariable int roomId,
-            @RequestBody MeetingRoomDTO roomDTO) {
-        meetingRoomService.updateMeetingRoomAvailability(roomId, roomDTO.isAvailable());
+            @RequestBody Map<String, Boolean> requestBody) {
+        boolean availability = requestBody.get("availability");
+        meetingRoomService.updateMeetingRoomAvailability(roomId, availability);
         return ResponseEntity.ok(new ApiResponse<>("Meeting Room availability updated successfully", 200, "Success", null));
     }
+
+
+
 
 
 

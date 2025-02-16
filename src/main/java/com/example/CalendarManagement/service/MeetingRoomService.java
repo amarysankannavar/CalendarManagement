@@ -48,7 +48,7 @@ public class MeetingRoomService {
 
     public MeetingRoomDTO getMeetingRoomById(int meetingRoomId) {
         MeetingRoomModel meetingRoom = meetingRoomRepo.findById(meetingRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+                .orElseThrow(() -> new RoomNotFoundException("Meeting Room not found"));
 
         return new MeetingRoomDTO(meetingRoom.getRoomId(), meetingRoom.getRoomName(), meetingRoom.getRoomLocation(), meetingRoom.getOfficeId(), meetingRoom.isAvailable());
     }
@@ -64,6 +64,9 @@ public class MeetingRoomService {
     public void updateMeetingRoomAvailability(int roomId, boolean availability) {
         MeetingRoomModel room = meetingRoomRepo.findById(roomId)
                 .orElseThrow(() -> new RoomNotFoundException("Meeting Room not found"));
+        if (room.isAvailable() == availability) {
+            return;
+        }
 
         room.setAvailable(availability);
         meetingRoomRepo.save(room);
