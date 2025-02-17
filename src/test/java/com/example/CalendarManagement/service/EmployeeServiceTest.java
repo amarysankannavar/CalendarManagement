@@ -4,7 +4,9 @@ import com.example.CalendarManagement.DTO.EmployeeDTO;
 import com.example.CalendarManagement.Exception.DuplicateEmailException;
 import com.example.CalendarManagement.Exception.EmployeeNotFoundException;
 import com.example.CalendarManagement.model.EmployeeModel;
+import com.example.CalendarManagement.model.OfficeModel;
 import com.example.CalendarManagement.repository.EmployeeRepo;
+import com.example.CalendarManagement.repository.OfficeRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -12,20 +14,21 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 class EmployeeServiceTest {
 
     @Mock
     private EmployeeRepo employeeRepo;
+
+    @Mock
+    private OfficeRepo officeRepo; // Mock the OfficeRepo to handle office-related operations
 
     @InjectMocks
     private EmployeeService employeeService;
@@ -37,11 +40,16 @@ class EmployeeServiceTest {
 
     @Test
     void addEmployee_givenValidEmployeeDetails_returnsSuccess() {
-        EmployeeDTO empDTO = new EmployeeDTO(1, "Amar", "amar@capillary.com", "Bangalore", true);
-        EmployeeModel empModel = new EmployeeModel(empDTO.getName(), empDTO.getWorkEmail(), empDTO.getOfficeLocation(), empDTO.isActive());
+        int officeId = 1;
+        EmployeeDTO empDTO = new EmployeeDTO(1, "Amar", "amar@capillary.com", officeId, true);
+        OfficeModel office = new OfficeModel();  // Create OfficeModel mock
+        office.setId(officeId);
+
+        EmployeeModel empModel = new EmployeeModel(empDTO.getName(), empDTO.getWorkEmail(), office, empDTO.isActive());
 
         when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(false);
         when(employeeRepo.findByWorkEmail(empDTO.getWorkEmail())).thenReturn(Optional.empty());
+        when(officeRepo.findById(officeId)).thenReturn(Optional.of(office)); // Mock office data
 
         assertDoesNotThrow(() -> employeeService.addEmployee(empDTO));
 
@@ -50,7 +58,7 @@ class EmployeeServiceTest {
 
     @Test
     void addEmployee_givenDuplicateEmployeeId_throwsException() {
-        EmployeeDTO empDTO = new EmployeeDTO(1, "New", "amar@example.com", "Bangalore", true);
+        EmployeeDTO empDTO = new EmployeeDTO(1, "New", "amar@example.com", 1, true);
 
         when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(true);
 
@@ -62,7 +70,7 @@ class EmployeeServiceTest {
 
     @Test
     void addEmployee_givenInvalidEmail_throwsValidationError() {
-        EmployeeDTO empDTO = new EmployeeDTO(1, "Sham", "invalid-email", "Bangalore", true);
+        EmployeeDTO empDTO = new EmployeeDTO(1, "Sham", "invalid-email", 1, true);
 
         when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(false);
         when(employeeRepo.findByWorkEmail(empDTO.getWorkEmail())).thenReturn(Optional.empty());
@@ -75,8 +83,8 @@ class EmployeeServiceTest {
 
     @Test
     void addEmployee_givenDuplicateEmail_throwsException() {
-        EmployeeDTO empDTO = new EmployeeDTO(1, "Amar", "amar@capillary.com", "Bangalore", true);
-        EmployeeModel existingEmployee = new EmployeeModel(empDTO.getName(), empDTO.getWorkEmail(), empDTO.getOfficeLocation(), empDTO.isActive());
+        EmployeeDTO empDTO = new EmployeeDTO(1, "Amar", "amar@capillary.com", 1, true);
+        EmployeeModel existingEmployee = new EmployeeModel(empDTO.getName(), empDTO.getWorkEmail(), new OfficeModel(), empDTO.isActive());
 
         when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(false);
         when(employeeRepo.findByWorkEmail(empDTO.getWorkEmail())).thenReturn(Optional.of(existingEmployee));
@@ -89,7 +97,7 @@ class EmployeeServiceTest {
 
     @Test
     void addEmployee_givenEmptyName_throwsValidationError() {
-        EmployeeDTO empDTO = new EmployeeDTO(1, "", "amar@example.com", "Bangalore", true);
+        EmployeeDTO empDTO = new EmployeeDTO(1, "", "amar@example.com", 1, true);
 
         when(employeeRepo.existsById(empDTO.getEmployeeId())).thenReturn(false);
         when(employeeRepo.findByWorkEmail(empDTO.getWorkEmail())).thenReturn(Optional.empty());
@@ -101,39 +109,32 @@ class EmployeeServiceTest {
     }
 
     @Test
-    void removeEmployee_givenEmployeeId_setsActiveFalse() {
-        // Given
+    void removeEmployee_givenEmployeeId_deletesEmployee() {
         int employeeId = 1;
         EmployeeModel employee = new EmployeeModel();
         employee.setId(employeeId);
-        employee.setActive(true); // Initially active
+        employee.setName("John Doe");
 
         when(employeeRepo.findById(employeeId)).thenReturn(Optional.of(employee));
-        when(employeeRepo.save(any(EmployeeModel.class))).thenReturn(employee); // Mock save operation
 
-        employeeService.deleteEmployee(employeeId);
+        boolean result = employeeService.deleteEmployee(employeeId);
 
-        assertFalse(employee.isActive()); // Ensure the active flag is set to false
+        assertTrue(result);  // Ensure the result is true as the employee exists and is deleted
 
-        verify(employeeRepo, times(1)).findById(employeeId);
-        verify(employeeRepo, times(1)).save(employee);
+        verify(employeeRepo, times(1)).delete(employee);  // Ensure delete was called once
     }
 
     @Test
     void removeEmployee_givenNonExistingEmployeeId_throwsNotFoundException(){
         int employeeId=2;
 
-
         when(employeeRepo.findById(employeeId)).thenReturn(Optional.empty());
-
-
 
         Exception exception = assertThrows(EmployeeNotFoundException.class,()-> employeeService.deleteEmployee(employeeId));
         assertEquals("Employee not found",exception.getMessage());
         verify(employeeRepo, times(1)).findById(employeeId);
         verify(employeeRepo, never()).save(any(EmployeeModel.class));
     }
-
 
     @Test
     void getEmployees_givenValidEmployeeId_returnsEmployeeInfo() {
@@ -143,6 +144,7 @@ class EmployeeServiceTest {
         employee.setId(employeeId);
         employee.setName("John Doe");
         employee.setActive(true);
+        employee.setOffice(new OfficeModel());  // Mock office info
 
         when(employeeRepo.findById(employeeId)).thenReturn(Optional.of(employee));
 
@@ -161,8 +163,10 @@ class EmployeeServiceTest {
     @Test
     void getEmployees_whenEmployeesExist_returnEmployeeList() {
         // Given
-        EmployeeModel employee1 = new EmployeeModel( "John Doe", "john@example.com", "NY Office", true);
-        EmployeeModel employee2 = new EmployeeModel( "Jane Doe", "jane@example.com", "LA Office", true);
+        OfficeModel office = new OfficeModel();
+        office.setId(1);
+        EmployeeModel employee1 = new EmployeeModel("Amar", "amar@example.com", office, true);
+        EmployeeModel employee2 = new EmployeeModel("Amarys", "amarys@example.com", office, true);
 
         List<EmployeeModel> employeeModels = Arrays.asList(employee1, employee2);
 
@@ -174,10 +178,10 @@ class EmployeeServiceTest {
         // Then
         assertThat(result)
                 .hasSize(2)
-                .extracting( EmployeeDTO::getName, EmployeeDTO::getWorkEmail, EmployeeDTO::getOfficeLocation, EmployeeDTO::isActive)
+                .extracting(EmployeeDTO::getName, EmployeeDTO::getWorkEmail, EmployeeDTO::getOfficeId, EmployeeDTO::isActive)
                 .containsExactlyInAnyOrder(
-                        tuple( "John Doe", "john@example.com", "NY Office", true),
-                        tuple( "Jane Doe", "jane@example.com", "LA Office", true)
+                        tuple("Amar", "amar@example.com", 1, true),
+                        tuple("Amarys", "amarys@example.com", 1, true)
                 );
 
         verify(employeeRepo, times(1)).findAll();
@@ -195,9 +199,4 @@ class EmployeeServiceTest {
 
         verify(employeeRepo, times(1)).findById(employeeId);
     }
-
-
-
-
-
 }

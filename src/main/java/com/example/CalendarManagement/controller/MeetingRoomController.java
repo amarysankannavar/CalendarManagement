@@ -53,11 +53,4 @@ public class MeetingRoomController {
         meetingRoomService.updateMeetingRoomAvailability(roomId, availability);
         return ResponseEntity.ok(new ApiResponse<>("Meeting Room availability updated successfully", 200, "Success", null));
     }
-
-
-
-
-
-
-
 }

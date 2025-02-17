@@ -15,23 +15,16 @@ public class EmployeeDTO {
     @Email(message = "Invalid email format.")
     private String workEmail;
 
-    @NotBlank(message = "Office location cannot be empty.")
-    private String officeLocation;
+    // Changed to reference OfficeModel instead of officeLocation string
+    private int officeId;
 
-
-
-
-
-    public EmployeeDTO(int employeeId, String name, String workEmail, String officeLocation, boolean isActive) {
+    public EmployeeDTO(int employeeId, String name, String workEmail, int officeId, boolean isActive) {
         this.employeeId = employeeId;
         this.name = name;
         this.workEmail = workEmail;
-        this.officeLocation = officeLocation;
+        this.officeId = officeId;
         this.isActive = isActive;
     }
-
-
-
 
     public int getEmployeeId() {
         return employeeId;
@@ -45,10 +38,9 @@ public class EmployeeDTO {
         return workEmail;
     }
 
-    public String getOfficeLocation() {
-        return officeLocation;
+    public int getOfficeId() {
+        return officeId;
     }
-
 
     public void setEmployeeId(int employeeId) {
         this.employeeId = employeeId;
@@ -62,15 +54,15 @@ public class EmployeeDTO {
         this.workEmail = workEmail;
     }
 
-    public void setOfficeLocation(String officeLocation) {
-        this.officeLocation = officeLocation;
+    public void setOfficeId(int officeId) {
+        this.officeId = officeId;
     }
 
-    public boolean isActive(){
+    public boolean isActive() {
         return isActive;
     }
 
-    public void setActive(boolean active){
-        this.isActive=active;
+    public void setActive(boolean active) {
+        this.isActive = active;
     }
 }

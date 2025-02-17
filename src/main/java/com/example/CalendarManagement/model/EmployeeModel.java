@@ -14,16 +14,22 @@ public class EmployeeModel {
     private String officeLocation;
     @Column(columnDefinition = "BOOLEAN DEFAULT true")
     private boolean isActive=true;
+    @ManyToOne
+    @JoinColumn(name = "officeId", nullable = false)
+    private OfficeModel office;
 
     public EmployeeModel() {
     }
 
-    public EmployeeModel(String name, String workEmail, String officeLocation, boolean active) {
+    public EmployeeModel(String name, String workEmail, OfficeModel office, boolean active) {
         this.name=name;
         this.workEmail=workEmail;
-        this.officeLocation=officeLocation;
+        this.office=office;
 
     }
+
+
+
 
     public int getId(){
         return id;
@@ -59,12 +65,12 @@ public class EmployeeModel {
         this.workEmail=workEmail;
     }
 
-    public String getOfficeLocation(){
-        return officeLocation;
+    public OfficeModel getOffice(){
+        return office;
     }
 
-    public void setOfficeLocation(String officeLocation){
-        this.officeLocation=officeLocation;
+    public void setOffice(OfficeModel office){
+        this.office=office;
     }
 
 
