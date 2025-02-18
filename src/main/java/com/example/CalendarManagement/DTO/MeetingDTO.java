@@ -4,6 +4,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public class MeetingDTO {
 
@@ -43,6 +44,8 @@ public class MeetingDTO {
         this.isActive = isActive;
     }
 
+    @NotNull(message = "Employee IDs cannot be null.")
+    private List<Integer> employeeIds;
     // Getters and Setters
     public int getMeetingId() {
         return meetingId;

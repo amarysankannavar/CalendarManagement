@@ -12,5 +12,8 @@ public interface EmployeeRepo extends JpaRepository<EmployeeModel,Integer> {
     @Query("SELECT e FROM EmployeeModel e WHERE e.isActive = true")
     List<EmployeeModel> findActiveEmployees();
 
+    @Query("SELECT e FROM EmployeeModel e WHERE e.id = :id")
+    EmployeeModel findEmployeeById(Integer id);
+
     Optional<EmployeeModel> findByWorkEmail(String workEmail);
 }

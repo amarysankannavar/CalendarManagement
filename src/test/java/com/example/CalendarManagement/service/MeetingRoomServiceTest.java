@@ -3,7 +3,9 @@ package com.example.CalendarManagement.service;
 import com.example.CalendarManagement.DTO.MeetingRoomDTO;
 import com.example.CalendarManagement.Exception.RoomNotFoundException;
 import com.example.CalendarManagement.model.MeetingRoomModel;
+import com.example.CalendarManagement.model.OfficeModel;
 import com.example.CalendarManagement.repository.MeetingRoomRepo;
+import com.example.CalendarManagement.repository.OfficeRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,6 +24,9 @@ class MeetingRoomServiceTest {
     @Mock
     private MeetingRoomRepo meetingRoomRepo;
 
+    @Mock
+    private OfficeRepo officeRepo;
+
     @InjectMocks
     private MeetingRoomService meetingRoomService;
 
@@ -33,9 +38,14 @@ class MeetingRoomServiceTest {
     @Test
     void addMeetingRoom_givenValidMeetingRoomDetails_returnsSuccess() {
         MeetingRoomDTO roomDTO = new MeetingRoomDTO(1, "Conference A", "Floor 2", 101, true);
-        MeetingRoomModel roomModel = new MeetingRoomModel(roomDTO.getRoomName(), roomDTO.getRoomLocation(), roomDTO.getOfficeId());
+       // MeetingRoomDTO roomDTO = new MeetingRoomDTO(1, "Conference A", "Floor 2", 101, true);
+        OfficeModel office = new OfficeModel(); // Mock OfficeModel
+        office.setId(101);
+        MeetingRoomModel roomModel = new MeetingRoomModel(roomDTO.getRoomName(), roomDTO.getRoomLocation(), office);
 
         when(meetingRoomRepo.existsById(roomDTO.getRoomId())).thenReturn(false);
+        when(officeRepo.findById(roomDTO.getOfficeId())).thenReturn(Optional.of(office));
+
 
         assertDoesNotThrow(() -> meetingRoomService.addMeetingRoom(roomDTO));
 
@@ -77,15 +87,17 @@ class MeetingRoomServiceTest {
     @Test
     void deleteMeetingRoom_givenExistingRoomId_deletesRoom() {
         int roomId = 1;
-        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
+        OfficeModel office2 = new OfficeModel(); // Mock OfficeModel
+        office2.setId(101);
+        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", office2);
         room.setRoomId(roomId);
 
         when(meetingRoomRepo.findById(roomId)).thenReturn(Optional.of(room));
 
         meetingRoomService.deleteMeetingRoom(roomId);
 
-        verify(meetingRoomRepo, times(1)).findById(roomId); // ✅ Ensure findById() was called
-        verify(meetingRoomRepo, times(1)).delete(room); // ✅ Ensure delete() was called
+        verify(meetingRoomRepo, times(1)).findById(roomId);
+        verify(meetingRoomRepo, times(1)).delete(room); 
     }
 
 
@@ -103,8 +115,12 @@ class MeetingRoomServiceTest {
 
     @Test
     void getMeetingRooms_whenRoomsExist_returnRoomList() {
-        MeetingRoomModel room1 = new MeetingRoomModel("Conference A", "Floor 2", 101);
-        MeetingRoomModel room2 = new MeetingRoomModel("Conference B", "Floor 3", 102);
+        OfficeModel office3 = new OfficeModel(); // Mock OfficeModel
+        office3.setId(103);
+        OfficeModel office4 = new OfficeModel(); // Mock OfficeModel
+        office4.setId(104);
+        MeetingRoomModel room1 = new MeetingRoomModel("Conference A", "Floor 2", office3);
+        MeetingRoomModel room2 = new MeetingRoomModel("Conference B", "Floor 3", office4);
         List<MeetingRoomModel> roomModels = Arrays.asList(room1, room2);
 
         when(meetingRoomRepo.findAll()).thenReturn(roomModels);
@@ -115,8 +131,8 @@ class MeetingRoomServiceTest {
                 .hasSize(2)
                 .extracting(MeetingRoomDTO::getRoomName, MeetingRoomDTO::getRoomLocation, MeetingRoomDTO::getOfficeId)
                 .containsExactlyInAnyOrder(
-                        tuple("Conference A", "Floor 2", 101),
-                        tuple("Conference B", "Floor 3", 102)
+                        tuple("Conference A", "Floor 2", office3.getId()),
+                        tuple("Conference B", "Floor 3", office4.getId())
                 );
 
         verify(meetingRoomRepo, times(1)).findAll();
@@ -125,7 +141,9 @@ class MeetingRoomServiceTest {
     @Test
     void getMeetingRoomById_givenExistingRoomId_returnsRoomInfo() {
         int roomId = 1;
-        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
+        OfficeModel office6 = new OfficeModel(); // Mock OfficeModel
+        office6.setId(106);
+        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", office6);
         room.setRoomId(roomId);
         room.setAvailable(true);
 
@@ -155,7 +173,9 @@ class MeetingRoomServiceTest {
     @Test
     void updateMeetingRoomAvailability_givenExistingRoomId_setsAvailableTrue() {
         int roomId = 1;
-        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
+        OfficeModel office5 = new OfficeModel(); // Mock OfficeModel
+        office5.setId(105);
+        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", office5);
         room.setRoomId(roomId);
         room.setAvailable(false);
 
@@ -176,7 +196,9 @@ class MeetingRoomServiceTest {
     @Test
     void updateMeetingRoomAvailability_givenExistingRoomId_setsAvailableFalse() {
         int roomId = 1;
-        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
+        OfficeModel office7 = new OfficeModel(); // Mock OfficeModel
+        office7.setId(107);
+        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", office7);
         room.setRoomId(roomId);
         room.setAvailable(true);
 
@@ -214,7 +236,9 @@ class MeetingRoomServiceTest {
     @Test
     void updateMeetingRoomAvailability_givenRoomAlreadyInDesiredState_doesNotChangeAvailability() {
         int roomId = 1;
-        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", 101);
+        OfficeModel office8 = new OfficeModel(); // Mock OfficeModel
+        office8.setId(108);
+        MeetingRoomModel room = new MeetingRoomModel("Conference A", "Floor 2", office8);
         room.setRoomId(roomId);
         room.setAvailable(true);
 

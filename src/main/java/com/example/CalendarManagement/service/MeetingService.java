@@ -1,14 +1,25 @@
 package com.example.CalendarManagement.service;
 
 import com.example.CalendarManagement.DTO.MeetingDTO;
+import com.example.CalendarManagement.DTO.MeetingRequestDTO;
 import com.example.CalendarManagement.Exception.MeetingNotFoundException;
 import com.example.CalendarManagement.model.MeetingModel;
 import com.example.CalendarManagement.model.MeetingRoomModel;
 import com.example.CalendarManagement.repository.MeetingRepo;
 import com.example.CalendarManagement.repository.MeetingRoomRepo;
+import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.CalendarManagement.generated.MeetingManage;
+
+import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -75,4 +86,37 @@ public class MeetingService {
             throw new MeetingNotFoundException("Meeting not found");
         }
     }
+
+    public boolean canSchedule(MeetingRequestDTO meetingRequestDTO){
+        try {
+            TTransport transport = new TSocket("localhost",9090);
+            transport.open();
+            TProtocol protocol = new TBinaryProtocol(transport);
+            MeetingManage.Client client = new MeetingManage.Client(protocol);
+
+            String start = String.valueOf(meetingRequestDTO.getStartTime());
+            String end = String.valueOf(meetingRequestDTO.getEndTime());
+            String date = String.valueOf(meetingRequestDTO.getDate());
+            List<Integer> employeeIds = meetingRequestDTO.getEmployeeIds();
+
+
+           try{
+             boolean  schedule = client.canScheduleMeeting(employeeIds,date,start,end);
+             return schedule;
+           } catch (TException e) {
+               throw new RuntimeException(e);
+           }
+
+
+        } catch (TTransportException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Transactional  // Ensures the database transaction is committed properly
+    public MeetingModel saveMeeting(MeetingModel meeting) {
+        return meetingRepo.save(meeting);
+    }
+
+
 }

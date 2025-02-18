@@ -58,6 +58,7 @@ public class EmployeeControllerIT {
 
     @Test
     void getAllEmployees_returnsEmployeesList() throws Exception {
+
         mockMvc.perform(get("/employees"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data", hasSize(2)))  // Expecting 2 employees
@@ -83,9 +84,13 @@ public class EmployeeControllerIT {
 
     @Test
     void addEmployee_givenEmployeeDetails_createsNewEmployee() throws Exception {
-        // Given: Prepare employee details
-        EmployeeDTO employeeDTO = new EmployeeDTO(1234, "amar", "amae@sdd", 1, true);  // Example officeId = 1
+        // Given: Create and save an office first
+        OfficeModel office = new OfficeModel("Main Office", "New York");
+        office.setId(5);
+        office = officeRepo.saveAndFlush(office);  // Ensure office is saved
 
+        // Given: Prepare employee details
+        EmployeeDTO employeeDTO = new EmployeeDTO(1234, "amar", "amae@sdd", office.getId(), true);
 
         // When: Perform POST request to add employee
         mockMvc.perform(post("/employees")
@@ -96,6 +101,7 @@ public class EmployeeControllerIT {
                 .andExpect(jsonPath("$.message").value("Employee added successfully"))  // Expect success message
                 .andExpect(jsonPath("$.code").value(201));  // Expect status code to be 201
     }
+
 
 
 

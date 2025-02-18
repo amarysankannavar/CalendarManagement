@@ -1,9 +1,6 @@
 package com.example.CalendarManagement.model;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 public class MeetingRoomModel {
@@ -12,17 +9,21 @@ public class MeetingRoomModel {
     private int roomId;
     private String roomName;
     private String roomLocation;
-    private int officeId;
+
+    @ManyToOne
+    @JoinColumn(name = "office_id", nullable = false)
+    private OfficeModel office;
+
     private boolean available=true;
 
     public MeetingRoomModel(){
 
     }
 
-    public MeetingRoomModel(String roomName,String roomLocation, int officeId){
+    public MeetingRoomModel(String roomName,String roomLocation, OfficeModel office){
         this.roomName=roomName;
         this.roomLocation=roomLocation;
-        this.officeId=officeId;
+        this.office=office;
     }
 
     public int getRoomId(){
@@ -41,12 +42,12 @@ public class MeetingRoomModel {
         this.roomName=roomName;
     }
 
-    public int getOfficeId(){
-        return officeId;
+    public OfficeModel getOffice(){
+        return office;
     }
 
-    public void setOfficeId(){
-        this.officeId =officeId;
+    public void setOffice(OfficeModel office){
+        this.office =office;
     }
     public boolean isAvailable(){
         return available;

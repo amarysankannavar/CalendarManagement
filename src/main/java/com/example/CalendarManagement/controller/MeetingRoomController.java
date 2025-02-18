@@ -1,10 +1,7 @@
 package com.example.CalendarManagement.controller;
 
 import com.example.CalendarManagement.DTO.ApiResponse;
-import com.example.CalendarManagement.DTO.EmployeeDTO;
 import com.example.CalendarManagement.DTO.MeetingRoomDTO;
-import com.example.CalendarManagement.Exception.RoomNotFoundException;
-import com.example.CalendarManagement.model.MeetingRoomModel;
 import com.example.CalendarManagement.service.MeetingRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -49,8 +46,12 @@ public class MeetingRoomController {
     public ResponseEntity<ApiResponse<String>> updateMeetingRoomAvailability(
             @PathVariable int roomId,
             @RequestBody Map<String, Boolean> requestBody) {
-        boolean availability = requestBody.get("availability");
-        meetingRoomService.updateMeetingRoomAvailability(roomId, availability);
+       try{
+           boolean availability = requestBody.get("availability");
+           meetingRoomService.updateMeetingRoomAvailability(roomId, availability);
+       } catch (Exception e) {
+           throw new RuntimeException(e);
+       }
         return ResponseEntity.ok(new ApiResponse<>("Meeting Room availability updated successfully", 200, "Success", null));
     }
 }

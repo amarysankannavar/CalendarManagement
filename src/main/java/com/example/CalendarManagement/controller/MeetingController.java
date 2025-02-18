@@ -2,6 +2,7 @@ package com.example.CalendarManagement.controller;
 
 import com.example.CalendarManagement.DTO.ApiResponse;
 import com.example.CalendarManagement.DTO.MeetingDTO;
+import com.example.CalendarManagement.DTO.MeetingRequestDTO;
 import com.example.CalendarManagement.service.MeetingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -48,5 +49,12 @@ public class MeetingController {
             return ResponseEntity.ok(new ApiResponse<>("Meeting deactivated successfully", 200, "Success", null));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>("Meeting not found", 404, null, null));
+    }
+
+    @PostMapping("/canSchedule")
+    public ResponseEntity<ApiResponse<String>> canScheduleMeeting(@Valid @RequestBody MeetingRequestDTO meetingRequestDTO){
+        boolean schedule = meetingService.canSchedule(meetingRequestDTO);
+        String s = schedule ? "Can be scheduled" : "Not scheduled";
+        return ResponseEntity.ok(new ApiResponse<>("The meeting availabilty fetched",200,s,null));
     }
 }
