@@ -2,6 +2,7 @@ package com.example.CalendarManagement.service;
 
 import com.example.CalendarManagement.DTO.MeetingDTO;
 import com.example.CalendarManagement.DTO.MeetingRequestDTO;
+import com.example.CalendarManagement.DTO.ScheduleMeetingDTO;
 import com.example.CalendarManagement.Exception.MeetingNotFoundException;
 import com.example.CalendarManagement.model.MeetingModel;
 import com.example.CalendarManagement.model.MeetingRoomModel;
@@ -87,9 +88,10 @@ public class MeetingService {
         }
     }
 
-    public boolean canSchedule(MeetingRequestDTO meetingRequestDTO){
+    public boolean canSchedule(MeetingRequestDTO meetingRequestDTO) {
+        TTransport transport = null;
         try {
-            TTransport transport = new TSocket("localhost",9090);
+            transport = new TSocket("localhost", 9090);
             transport.open();
             TProtocol protocol = new TBinaryProtocol(transport);
             MeetingManage.Client client = new MeetingManage.Client(protocol);
@@ -100,22 +102,61 @@ public class MeetingService {
             List<Integer> employeeIds = meetingRequestDTO.getEmployeeIds();
 
 
-           try{
-             boolean  schedule = client.canScheduleMeeting(employeeIds,date,start,end);
-             return schedule;
-           } catch (TException e) {
-               throw new RuntimeException(e);
-           }
+            try {
+                boolean schedule = client.canScheduleMeeting(employeeIds, date, start, end);
+                return schedule;
+            } catch (TException e) {
+                throw new RuntimeException(e);
+            }
 
 
         } catch (TTransportException e) {
             throw new RuntimeException(e);
+        } finally {
+            if (transport != null && transport.isOpen()) {
+                transport.close();  // CLOSE TRANSPORT HERE
+            }
         }
     }
 
     @Transactional  // Ensures the database transaction is committed properly
     public MeetingModel saveMeeting(MeetingModel meeting) {
         return meetingRepo.save(meeting);
+    }
+
+    public int scheduleMeeting(ScheduleMeetingDTO scheduleMeetingDTO){
+        TTransport transport = null;
+        int meetingId=0;
+        try{
+            transport = new TSocket("localhost",9090);
+            transport.open();
+            TProtocol protocol = new TBinaryProtocol(transport);
+            MeetingManage.Client client = new MeetingManage.Client(protocol);
+
+            String description = scheduleMeetingDTO.getDescription();
+            String agenda = scheduleMeetingDTO.getAgenda();
+            String start = String.valueOf(scheduleMeetingDTO.getStartTime());
+            String end = String.valueOf(scheduleMeetingDTO.getEndTime());
+            String date = String.valueOf(scheduleMeetingDTO.getDate());
+            List<Integer> employeeIds = scheduleMeetingDTO.getEmployeeIds();
+            int roomId = scheduleMeetingDTO.getRoomId();
+
+            try{
+                 meetingId = client.scheduleMeeting(description,agenda,employeeIds,date,start,end,roomId);
+            } catch (TException e) {
+                throw new RuntimeException(e);
+            }
+        } catch (TTransportException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (transport != null && transport.isOpen()) {
+                transport.close();  // CLOSE TRANSPORT HERE
+            }
+        }
+
+
+
+        return meetingId;
     }
 
 

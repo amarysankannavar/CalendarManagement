@@ -3,6 +3,7 @@ package com.example.CalendarManagement.controller;
 import com.example.CalendarManagement.DTO.ApiResponse;
 import com.example.CalendarManagement.DTO.MeetingDTO;
 import com.example.CalendarManagement.DTO.MeetingRequestDTO;
+import com.example.CalendarManagement.DTO.ScheduleMeetingDTO;
 import com.example.CalendarManagement.service.MeetingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,7 +55,14 @@ public class MeetingController {
     @PostMapping("/canSchedule")
     public ResponseEntity<ApiResponse<String>> canScheduleMeeting(@Valid @RequestBody MeetingRequestDTO meetingRequestDTO){
         boolean schedule = meetingService.canSchedule(meetingRequestDTO);
-        String s = schedule ? "Can be scheduled" : "Not scheduled";
-        return ResponseEntity.ok(new ApiResponse<>("The meeting availabilty fetched",200,s,null));
+        String canScheduleOrNot = schedule ? "Can be scheduled" : "Not scheduled";
+        return ResponseEntity.ok(new ApiResponse<>("The meeting availabilty fetched",200,canScheduleOrNot,null));
+    }
+
+    @PostMapping("scheduleMeeting")
+    public ResponseEntity<ApiResponse<String>> scheduleMeeting(@Valid @RequestBody ScheduleMeetingDTO scheduleMeetingDTO){
+        int meetId = meetingService.scheduleMeeting(scheduleMeetingDTO);
+        String data = meetId!=0 ? "meet is scheduled" : "meet is not scheduled";
+        return ResponseEntity.ok(new ApiResponse<>("meeting schedule details",200,data,null));
     }
 }
