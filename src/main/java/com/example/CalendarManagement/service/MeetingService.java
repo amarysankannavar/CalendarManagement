@@ -3,9 +3,12 @@ package com.example.CalendarManagement.service;
 import com.example.CalendarManagement.DTO.MeetingDTO;
 import com.example.CalendarManagement.DTO.MeetingRequestDTO;
 import com.example.CalendarManagement.DTO.ScheduleMeetingDTO;
+import com.example.CalendarManagement.Exception.EmployeeNotFoundException;
 import com.example.CalendarManagement.Exception.MeetingNotFoundException;
+import com.example.CalendarManagement.model.EmployeeModel;
 import com.example.CalendarManagement.model.MeetingModel;
 import com.example.CalendarManagement.model.MeetingRoomModel;
+import com.example.CalendarManagement.repository.EmployeeRepo;
 import com.example.CalendarManagement.repository.MeetingRepo;
 import com.example.CalendarManagement.repository.MeetingRoomRepo;
 import org.apache.thrift.TException;
@@ -34,6 +37,12 @@ public class MeetingService {
     @Autowired
     private MeetingRoomRepo meetingRoomRepo;
 
+    @Autowired
+    private EmployeeService employeeService;
+
+    @Autowired
+    private EmployeeRepo employeeRepo;
+
     // Fetch all meetings and return as MeetingDTO list
     public List<MeetingDTO> getMeetings() {
         return meetingRepo.findAll().stream()
@@ -53,18 +62,7 @@ public class MeetingService {
 
     // Add new meeting with validation
     public void addMeeting(MeetingDTO meetingDTO) {
-        if (meetingDTO.getMeetingId() != 0 && meetingRepo.existsById(meetingDTO.getMeetingId())) {
-            throw new IllegalArgumentException("Meeting ID already exists.");
-        }
 
-        // Validate description and agenda
-        if (meetingDTO.getDescription() == null || meetingDTO.getDescription().trim().isEmpty()) {
-            throw new IllegalArgumentException("Meeting description cannot be empty.");
-        }
-
-        if (meetingDTO.getAgenda() == null || meetingDTO.getAgenda().trim().isEmpty()) {
-            throw new IllegalArgumentException("Meeting agenda cannot be empty.");
-        }
 
         // Fetch the MeetingRoomModel object by roomId
         MeetingRoomModel meetingRoom = meetingRoomRepo.findById(meetingDTO.getRoomId())
@@ -89,6 +87,15 @@ public class MeetingService {
     }
 
     public boolean canSchedule(MeetingRequestDTO meetingRequestDTO) {
+
+        List<Integer> empIds = meetingRequestDTO.getEmployeeIds();
+        for (int empId : empIds) {
+            Optional<EmployeeModel> employee = employeeRepo.findById(empId);
+            if(!employee.isPresent()){
+                throw new EmployeeNotFoundException("Invalid employee ids");
+            }
+        }
+
         TTransport transport = null;
         try {
             transport = new TSocket("localhost", 9090);
@@ -125,6 +132,8 @@ public class MeetingService {
     }
 
     public int scheduleMeeting(ScheduleMeetingDTO scheduleMeetingDTO){
+
+
         TTransport transport = null;
         int meetingId=0;
         try{

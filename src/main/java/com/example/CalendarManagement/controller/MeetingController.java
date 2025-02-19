@@ -4,6 +4,7 @@ import com.example.CalendarManagement.DTO.ApiResponse;
 import com.example.CalendarManagement.DTO.MeetingDTO;
 import com.example.CalendarManagement.DTO.MeetingRequestDTO;
 import com.example.CalendarManagement.DTO.ScheduleMeetingDTO;
+import com.example.CalendarManagement.Exception.EmployeeNotFoundException;
 import com.example.CalendarManagement.service.MeetingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -61,8 +62,12 @@ public class MeetingController {
 
     @PostMapping("scheduleMeeting")
     public ResponseEntity<ApiResponse<String>> scheduleMeeting(@Valid @RequestBody ScheduleMeetingDTO scheduleMeetingDTO){
-        int meetId = meetingService.scheduleMeeting(scheduleMeetingDTO);
-        String data = meetId!=0 ? "meet is scheduled" : "meet is not scheduled";
-        return ResponseEntity.ok(new ApiResponse<>("meeting schedule details",200,data,null));
+
+            int meetId = meetingService.scheduleMeeting(scheduleMeetingDTO);
+            if(meetId==0){
+                return ResponseEntity.ok(new ApiResponse<>("meeting schedule details",400,"meet is not scheduled",null));
+            }
+            return ResponseEntity.ok(new ApiResponse<>("meeting schedule details",200,"meet is scheduled and the meet is is :"+meetId,null));
+
     }
 }

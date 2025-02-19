@@ -1,7 +1,7 @@
 package com.example.CalendarManagement.model;
 
 import javax.persistence.*;
-
+import javax.validation.constraints.NotBlank;
 
 
 @Entity
@@ -9,9 +9,11 @@ public class EmployeeModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @NotBlank(message = "Employee name cannot be empty okay.")
     private String name;
     private String workEmail;
-    private String officeLocation;
+
     @Column(columnDefinition = "BOOLEAN DEFAULT true")
     private boolean isActive=true;
     @ManyToOne

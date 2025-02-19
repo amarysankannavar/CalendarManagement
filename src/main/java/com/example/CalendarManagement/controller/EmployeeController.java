@@ -6,6 +6,7 @@ import com.example.CalendarManagement.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/employees")
+@Validated
 public class EmployeeController {
 
     @Autowired
@@ -41,11 +43,10 @@ public class EmployeeController {
 
     @DeleteMapping("/{employeeId}")
     public ResponseEntity<ApiResponse<String>> deleteEmployee(@PathVariable int employeeId) {
-        boolean isDeleted = service.deleteEmployee(employeeId);
-        if (isDeleted) {
-            return ResponseEntity.ok(new ApiResponse<>("Employee deactivated successfully", 200, "Success", null));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>("Employee not found", 404, null, null));
+        service.deleteEmployee(employeeId);
+
+        return ResponseEntity.ok(new ApiResponse<>("Employee deactivated successfully", 200, "Success", null));
+
     }
 
 }

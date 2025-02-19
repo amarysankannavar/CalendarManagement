@@ -34,14 +34,16 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ApiResponse<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        String message = "Validation failed";
-        return new ApiResponse<>(
+    public ResponseEntity<ApiResponse<String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+
+
+        ApiResponse<String> response = new ApiResponse<>(
                 "Invalid input data",
                 400,
                 null,
-                getErrorDetails(message)
+                getErrorDetails(ex.getMessage())
         );
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(EmployeeNotFoundException.class)

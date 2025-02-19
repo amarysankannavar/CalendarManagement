@@ -117,12 +117,13 @@ class EmployeeServiceTest {
 
         when(employeeRepo.findById(employeeId)).thenReturn(Optional.of(employee));
 
-        boolean result = employeeService.deleteEmployee(employeeId);
+        employeeService.deleteEmployee(employeeId);
 
-        assertTrue(result);  // Ensure the result is true as the employee exists and is deleted
+        assertFalse(employee.isActive());
 
-        verify(employeeRepo, times(1)).delete(employee);  // Ensure delete was called once
+        verify(employeeRepo, times(1)).save(employee);  // Ensure delete was called once
     }
+
 
     @Test
     void removeEmployee_givenNonExistingEmployeeId_throwsNotFoundException(){

@@ -41,7 +41,7 @@ public class EmployeeService {
 
     // Add new employee with validation
     public void addEmployee(EmployeeDTO empDTO) {
-        if (empDTO.getEmployeeId() != 0 && employeeRepo.existsById(empDTO.getEmployeeId())) {
+       /* if (empDTO.getEmployeeId() != 0 && employeeRepo.existsById(empDTO.getEmployeeId())) {
             throw new IllegalArgumentException("Employee ID already exists.");
         }
 
@@ -58,7 +58,7 @@ public class EmployeeService {
         // Check duplicate email
         if (employeeRepo.findByWorkEmail(empDTO.getWorkEmail()).isPresent()) {
             throw new DuplicateEmailException("Email already in use.");
-        }
+        } */
 
         // Fetch OfficeModel based on officeId
         OfficeModel office = officeRepo.findById(empDTO.getOfficeId())
@@ -70,14 +70,14 @@ public class EmployeeService {
     }
 
     // Delete (deactivate) employee
-   /* public void deleteEmployee(int employeeId) {
+    public void deleteEmployee(int employeeId) {
         EmployeeModel employee = employeeRepo.findById(employeeId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
 
         employee.setActive(false);  // Deactivating the employee instead of deleting
         employeeRepo.save(employee);
     }
-*/
+/*
     public boolean deleteEmployee(int employeeId) {
         Optional<EmployeeModel> employee = employeeRepo.findById(employeeId);
         if (employee.isPresent()) {
@@ -90,7 +90,7 @@ public class EmployeeService {
 
 
     }
-
+*/
 
 
 }
