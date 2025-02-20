@@ -81,7 +81,7 @@ public class MeetingRoomService {
         MeetingRoomModel room = meetingRoomRepo.findById(roomId)
                 .orElseThrow(() -> new RoomNotFoundException("Meeting Room not found"));
         if (room.isAvailable() == availability) {
-            return; // No change if already in desired state
+            return;
         }
 
         room.setAvailable(availability);

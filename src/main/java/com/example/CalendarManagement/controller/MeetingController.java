@@ -9,12 +9,17 @@ import com.example.CalendarManagement.service.MeetingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
+@Validated
 @RequestMapping("/meetings")
 public class MeetingController {
 
@@ -48,7 +53,7 @@ public class MeetingController {
     public ResponseEntity<ApiResponse<String>> deleteMeeting(@PathVariable int meetingId) {
         boolean isDeleted = meetingService.deleteMeeting(meetingId);
         if (isDeleted) {
-            return ResponseEntity.ok(new ApiResponse<>("Meeting deactivated successfully", 200, "Success", null));
+            return ResponseEntity.ok(new ApiResponse<>("Meeting deleted successfully", 200, "Success", null));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>("Meeting not found", 404, null, null));
     }
@@ -56,18 +61,33 @@ public class MeetingController {
     @PostMapping("/canSchedule")
     public ResponseEntity<ApiResponse<String>> canScheduleMeeting(@Valid @RequestBody MeetingRequestDTO meetingRequestDTO){
         boolean schedule = meetingService.canSchedule(meetingRequestDTO);
-        String canScheduleOrNot = schedule ? "Can be scheduled" : "Not scheduled";
+        String canScheduleOrNot = schedule ? "Can be scheduled" : "can not schedule.";
         return ResponseEntity.ok(new ApiResponse<>("The meeting availabilty fetched",200,canScheduleOrNot,null));
     }
 
-    @PostMapping("scheduleMeeting")
+    @PostMapping("/scheduleMeeting")
     public ResponseEntity<ApiResponse<String>> scheduleMeeting(@Valid @RequestBody ScheduleMeetingDTO scheduleMeetingDTO){
 
             int meetId = meetingService.scheduleMeeting(scheduleMeetingDTO);
             if(meetId==0){
-                return ResponseEntity.ok(new ApiResponse<>("meeting schedule details",400,"meet is not scheduled",null));
+                Map<String, String> errors = new HashMap();
+                errors.put("details:","conflicts error");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse<>("meeting schedule details",409,"meet is not scheduled",errors));
             }
             return ResponseEntity.ok(new ApiResponse<>("meeting schedule details",200,"meet is scheduled and the meet is is :"+meetId,null));
 
     }
+
+    @PostMapping("/{meetingId}/cancel")
+    public ResponseEntity<ApiResponse<String>> cancelMeeting(@PathVariable int meetingId) {
+        boolean isCancelled = meetingService.cancelMeeting(meetingId);
+
+        if (isCancelled) {
+            return ResponseEntity.ok(new ApiResponse<>("Meeting canceled successfully", 200, "Success", null));
+        } else {
+            return ResponseEntity.badRequest().body(new ApiResponse<>("Failed to cancel meeting", 400, "Error", null));
+        }
+    }
+
+
 }

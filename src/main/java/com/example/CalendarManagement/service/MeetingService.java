@@ -4,6 +4,7 @@ import com.example.CalendarManagement.DTO.MeetingDTO;
 import com.example.CalendarManagement.DTO.MeetingRequestDTO;
 import com.example.CalendarManagement.DTO.ScheduleMeetingDTO;
 import com.example.CalendarManagement.Exception.EmployeeNotFoundException;
+import com.example.CalendarManagement.Exception.EmployeesNotAvailableException;
 import com.example.CalendarManagement.Exception.MeetingNotFoundException;
 import com.example.CalendarManagement.model.EmployeeModel;
 import com.example.CalendarManagement.model.MeetingModel;
@@ -17,6 +18,8 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,8 @@ import com.example.CalendarManagement.generated.MeetingManage;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,6 +47,11 @@ public class MeetingService {
 
     @Autowired
     private EmployeeRepo employeeRepo;
+
+
+
+
+
 
     // Fetch all meetings and return as MeetingDTO list
     public List<MeetingDTO> getMeetings() {
@@ -87,6 +97,27 @@ public class MeetingService {
     }
 
     public boolean canSchedule(MeetingRequestDTO meetingRequestDTO) {
+        // Validate date (must be today or later)
+        if(meetingRequestDTO.getEmployeeIds().size()<6){
+            throw new IllegalArgumentException("The number of employees should be more than 6.");
+        }
+
+        if (meetingRequestDTO.getDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Meeting date must be today or a future date.");
+        }
+
+
+        if (!meetingRequestDTO.getStartTime().isBefore(meetingRequestDTO.getEndTime())) {
+            throw new IllegalArgumentException("Start time must be before end time.");
+        }
+
+
+      /*  List<Integer> availableEmployees = employeeRepo.findAvailableEmpoloyees(meetingRequestDTO.getEmployeeIds(), meetingRequestDTO.getDate(), meetingRequestDTO.getStartTime(), meetingRequestDTO.getEndTime());
+        if(availableEmployees.size()!=meetingRequestDTO.getEmployeeIds().size()){
+
+           throw new EmployeesNotAvailableException("Employees are busy.");
+        } */
+
 
         List<Integer> empIds = meetingRequestDTO.getEmployeeIds();
         for (int empId : empIds) {
@@ -107,6 +138,7 @@ public class MeetingService {
             String end = String.valueOf(meetingRequestDTO.getEndTime());
             String date = String.valueOf(meetingRequestDTO.getDate());
             List<Integer> employeeIds = meetingRequestDTO.getEmployeeIds();
+
 
 
             try {
@@ -132,6 +164,24 @@ public class MeetingService {
     }
 
     public int scheduleMeeting(ScheduleMeetingDTO scheduleMeetingDTO){
+       /* List<Integer> availableEmployees = employeeRepo.findAvailableEmpoloyees(scheduleMeetingDTO.getEmployeeIds(), scheduleMeetingDTO.getDate(), scheduleMeetingDTO.getStartTime(), scheduleMeetingDTO.getEndTime());
+        if(availableEmployees.size()!=scheduleMeetingDTO.getEmployeeIds().size()){
+
+            throw new EmployeesNotAvailableException("Employees are busy.");
+
+        } */
+        if(scheduleMeetingDTO.getEmployeeIds().size()<6){
+           throw new IllegalArgumentException("The number of employees should be more than 6.");
+        }
+        if (scheduleMeetingDTO.getDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Meeting date must be today or a future date.");
+        }
+
+
+        if (!scheduleMeetingDTO.getStartTime().isBefore(scheduleMeetingDTO.getEndTime())) {
+            throw new IllegalArgumentException("Start time must be before end time.");
+        }
+
 
 
         TTransport transport = null;
@@ -167,6 +217,21 @@ public class MeetingService {
 
         return meetingId;
     }
+
+    public boolean cancelMeeting(int meetingId) {
+        Optional<MeetingModel> meetingOptional = meetingRepo.findById(meetingId);
+
+        if (!meetingOptional.isPresent()) {
+            throw new MeetingNotFoundException("Meeting not found with ID: " + meetingId);
+        }
+
+        MeetingModel meeting = meetingOptional.get();
+        meeting.setActive(false); // Soft delete
+        meetingRepo.save(meeting);
+
+        return true; // Successfully canceled
+    }
+
 
 
 }

@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = CalendarManagementApplication.class)
 @AutoConfigureMockMvc
-@Transactional
+//@Transactional
 @ActiveProfiles("test")  // Use test profile
 @TestPropertySource("classpath:application-test.properties")
 public class EmployeeControllerIT {
@@ -45,8 +45,8 @@ public class EmployeeControllerIT {
 
     @BeforeEach
     void setUp() {
-        officeRepo.deleteAll();  // Ensure a clean slate before running tests
-        employeeRepo.deleteAll();
+//        officeRepo.deleteAll();
+//        employeeRepo.deleteAll();
 
         nyOffice = officeRepo.save(new OfficeModel("NY Office", "New York"));
         laOffice = officeRepo.save(new OfficeModel("LA Office", "Los Angeles"));
